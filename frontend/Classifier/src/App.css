@@ -439,6 +439,10 @@ input:checked + .theme-slider:before {
 .transactions-table-container {
   margin-top: 1.5rem;
   overflow-x: auto;
+  max-height: 400px; /* Set a fixed height for vertical scrolling */
+  overflow-y: auto; /* Enable vertical scrollbar */
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
 }
 
 .transactions-table {
