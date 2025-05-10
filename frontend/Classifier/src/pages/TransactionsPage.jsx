@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
@@ -6,6 +6,20 @@ function TransactionsPage() {
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadCount, setUploadCount] = useState(0);
+  
+  // Load transactions from localStorage on component mount
+  useEffect(() => {
+    const savedTransactions = localStorage.getItem('walletwise_transactions');
+    if (savedTransactions) {
+      setTransactions(JSON.parse(savedTransactions));
+    }
+  }, []);
+  
+  // Save transactions to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('walletwise_transactions', JSON.stringify(transactions));
+  }, [transactions]);
   
   const handleLogout = () => {
     localStorage.removeItem('walletwise_user');
@@ -23,20 +37,33 @@ function TransactionsPage() {
         // and update the transactions state with the parsed data
         setIsUploading(false);
         
+        // Generate a unique ID base for this upload batch
+        const idBase = Date.now();
+        const uploadIndex = uploadCount + 1;
+        
         // For demonstration, we'll add some mock transactions
-        setTransactions([
-          { id: 1, date: '2025-05-01', description: 'Grocery Store', amount: -120.50, category: 'Groceries' },
-          { id: 2, date: '2025-05-03', description: 'Monthly Salary', amount: 3000.00, category: 'Income' },
-          { id: 3, date: '2025-05-05', description: 'Coffee Shop', amount: -4.75, category: 'Dining' },
-          { id: 4, date: '2025-05-07', description: 'Gas Station', amount: -45.00, category: 'Transportation' },
-          { id: 5, date: '2025-05-10', description: 'Online Subscription', amount: -15.99, category: 'Entertainment' }
-        ]);
+        // Use the spread operator to append new transactions instead of replacing
+        const newTransactions = [
+          { id: `${idBase}-1`, date: `2025-05-${uploadIndex * 2}`, description: 'Grocery Store', amount: -120.50 - (uploadIndex * 5), category: 'Groceries' },
+          { id: `${idBase}-2`, date: `2025-05-${uploadIndex * 2 + 2}`, description: 'Monthly Salary', amount: 3000.00, category: 'Income' },
+          { id: `${idBase}-3`, date: `2025-05-${uploadIndex * 2 + 4}`, description: 'Coffee Shop', amount: -4.75 - (uploadIndex * 0.5), category: 'Dining' },
+          { id: `${idBase}-4`, date: `2025-05-${uploadIndex * 2 + 6}`, description: 'Gas Station', amount: -45.00 - (uploadIndex * 2), category: 'Transportation' },
+          { id: `${idBase}-5`, date: `2025-05-${uploadIndex * 2 + 8}`, description: 'Online Subscription', amount: -15.99, category: 'Entertainment' }
+        ];
+        
+        setTransactions(prevTransactions => [...prevTransactions, ...newTransactions]);
+        setUploadCount(prevCount => prevCount + 1);
+        
+        // Reset the file input to allow uploading the same file again
+        event.target.value = null;
       }, 1500);
     }
   };
   
   const clearTransactions = () => {
     setTransactions([]);
+    localStorage.removeItem('walletwise_transactions');
+    setUploadCount(0);
   };
   
   return (
