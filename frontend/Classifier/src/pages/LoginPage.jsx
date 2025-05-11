@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, signup } from '../utils/auth';
+import './LoginPage.css';
+import loginIllustration from '../assets/finance-illustration.svg';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
@@ -104,80 +106,98 @@ function LoginPage() {
     setConfirmPassword('');
   };
 
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className="login-page">
-      <div className="login-container">
-        <h1>WalletWise</h1>
-        <h2>{isSignup ? 'Create an account' : 'Login to your account'}</h2>
-        
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input 
-              type="text" 
-              id="username" 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              disabled={isLoading}
-            />
+      <div className="login-illustration">
+        <div className="illustration-container">
+          <img src={loginIllustration} alt="Financial analytics illustration" />
+        </div>
+      </div>
+      
+      <div className="login-form-container">
+        <div className="login-form-wrapper">
+          <div className="login-branding">
+            <h1 className="app-name">WalletWise</h1>
           </div>
           
-
-          
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              disabled={isLoading}
-            />
-          </div>
-          
-          {isSignup && (
+          <form onSubmit={handleSubmit} className="login-form">
             <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
+              <label htmlFor="username">Username</label>
               <input 
-                type="password" 
-                id="confirmPassword" 
-                value={confirmPassword} 
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your password"
+                type="text" 
+                id="username" 
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
                 disabled={isLoading}
               />
             </div>
-          )}
-          
-          <button 
-            type="submit" 
-            className="login-submit-btn"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Processing...' : isSignup ? 'Sign Up' : 'Login'}
-          </button>
-        </form>
-        
-        <div className="auth-toggle">
-          <p>
-            {isSignup 
-              ? 'Already have an account?' 
-              : 'Don\'t have an account?'}
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <div className="password-field">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  id="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  disabled={isLoading}
+                />
+                <button 
+                  type="button" 
+                  className="password-toggle" 
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+            </div>
+            
+            {isSignup && (
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <input 
+                  type="password" 
+                  id="confirmPassword" 
+                  value={confirmPassword} 
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your password"
+                  disabled={isLoading}
+                />
+              </div>
+            )}
+            
             <button 
-              type="button" 
-              className="toggle-btn" 
-              onClick={toggleMode}
+              type="submit" 
+              className="submit-button"
               disabled={isLoading}
             >
-              {isSignup ? 'Login' : 'Sign Up'}
+              {isLoading ? 'Processing...' : isSignup ? 'Sign Up' : 'Sign In'}
             </button>
-          </p>
+          </form>
+          
+          <div className="auth-toggle">
+            <p>
+              {isSignup 
+                ? 'Already have an account?' 
+                : 'Don\'t have an account?'}
+              <button 
+                type="button" 
+                className="toggle-btn" 
+                onClick={toggleMode}
+                disabled={isLoading}
+              >
+                {isSignup ? 'Sign In' : 'Sign Up'}
+              </button>
+            </p>
+          </div>
+          
+          {error && <div className="message error-message">{error}</div>}
+          {success && <div className="message success-message">{success}</div>}
         </div>
-        
-        {error && <div className="login-error">{error}</div>}
-        {success && <div className="login-success">{success}</div>}
       </div>
     </div>
   );

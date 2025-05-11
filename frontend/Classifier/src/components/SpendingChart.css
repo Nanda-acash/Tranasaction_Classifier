@@ -98,6 +98,12 @@
   border-radius: 4px;
   transition: width 0.5s ease, transform 0.3s ease;
   box-shadow: 0 2px 4px var(--shadow-color);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  overflow: hidden;
 }
 
 .bar:hover {
@@ -108,6 +114,16 @@
 .bar-value {
   font-weight: 500;
   color: var(--text-color);
+  min-width: 80px;
+  text-align: left;
+}
+
+.bar-label-inside {
+  color: white;
+  font-weight: bold;
+  font-size: 0.9rem;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
 }
 
 .pie-chart-container {
@@ -159,7 +175,13 @@
 .loading, .no-data {
   text-align: center;
   margin: 30px 0;
-  color: #666;
+  color: var(--text-color);
+  opacity: 0.7;
+  font-style: italic;
+  padding: 20px;
+  background-color: var(--hover-bg);
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
 }
 
 .error-message {

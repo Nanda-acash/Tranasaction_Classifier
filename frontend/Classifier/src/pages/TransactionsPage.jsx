@@ -28,6 +28,23 @@ function TransactionsPage() {
     category_id: ''
   });
 
+  // Function to sort transactions by date (newest first)
+  const sortTransactionsByDate = (transactions) => {
+    return [...transactions].sort((a, b) => {
+      // Ensure we're comparing Date objects
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      
+      // Check if dates are valid
+      if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+        console.warn('Invalid date found in transaction:', isNaN(dateA.getTime()) ? a : b);
+        return 0;
+      }
+      
+      return dateB - dateA; // Newest first
+    });
+  };
+  
   // Load transactions and categories from API on component mount
   useEffect(() => {
     const fetchData = async () => {
@@ -41,7 +58,11 @@ function TransactionsPage() {
         
         // Then fetch transactions
         const transactionsData = await transactionsApi.getTransactions();
-        setTransactions(transactionsData);
+        
+        // Sort transactions by date (newest first)
+        const sortedTransactions = sortTransactionsByDate(transactionsData);
+        
+        setTransactions(sortedTransactions);
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load data. Please try again later.');
@@ -67,25 +88,49 @@ function TransactionsPage() {
     try {
       setIsUploading(true);
       setError(null);
+      setSuccessMessage('');
       
       const formData = new FormData();
       formData.append('file', file);
       
-      const result = await transactionsApi.uploadCsv(formData);
-      
-      // Update transactions list with newly uploaded transactions
-      setTransactions(result);
-      setSuccessMessage(`Successfully uploaded ${file.name}. ${result.length} transactions imported.`);
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => setSuccessMessage(''), 5000);
+      // Wrap the API call in a try-catch to prevent unhandled rejections
+      try {
+        const result = await transactionsApi.uploadCsv(formData);
+        
+        // Update transactions list with newly uploaded transactions
+        if (Array.isArray(result)) {
+          // Sort the transactions before setting them
+          const sortedTransactions = sortTransactionsByDate(result);
+          setTransactions(sortedTransactions);
+          setSuccessMessage(`Successfully uploaded ${file.name}. ${result.length} transactions imported.`);
+        } else if (result && result.transactions) {
+          // Sort the transactions before setting them
+          const sortedTransactions = sortTransactionsByDate(result.transactions);
+          setTransactions(sortedTransactions);
+          setSuccessMessage(`Successfully uploaded ${file.name}. ${result.transactions.length} transactions imported.`);
+        } else {
+          console.warn('Unexpected response format:', result);
+          setSuccessMessage(`Successfully uploaded ${file.name}.`);
+          // Refresh transactions list
+          const transactionsData = await transactionsApi.getTransactions();
+          // Sort the transactions before setting them
+          const sortedTransactions = sortTransactionsByDate(transactionsData);
+          setTransactions(sortedTransactions);
+        }
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccessMessage(''), 5000);
+      } catch (apiError) {
+        console.error('API error during file upload:', apiError);
+        setError(`Failed to upload file: ${apiError.message || 'Unknown error'}`);
+      }
     } catch (err) {
-      console.error('Error uploading file:', err);
-      setError(`Failed to upload file: ${err.message}`);
+      console.error('Error in file upload handler:', err);
+      setError(`Failed to upload file: ${err.message || 'Unknown error'}`);
     } finally {
       setIsUploading(false);
       // Reset file input
-      e.target.value = null;
+      if (e.target) e.target.value = null;
     }
   };
   
@@ -100,6 +145,19 @@ function TransactionsPage() {
     });
   };
   
+  // Handle select all transactions
+  const handleSelectAll = () => {
+    // If all selectable transactions are already selected, deselect all
+    const selectableTransactions = transactions.filter(t => !t.user_id).map(t => t.id);
+    const allSelected = selectableTransactions.every(id => selectedTransactions.includes(id));
+    
+    if (allSelected) {
+      setSelectedTransactions([]);
+    } else {
+      setSelectedTransactions(selectableTransactions);
+    }
+  };
+  
   // Save selected transactions to user account
   const handleSaveTransactions = async () => {
     if (selectedTransactions.length === 0) return;
@@ -112,7 +170,9 @@ function TransactionsPage() {
       
       // Update transactions to reflect they're now saved
       const updatedTransactions = await transactionsApi.getTransactions();
-      setTransactions(updatedTransactions);
+      // Sort the transactions before setting them
+      const sortedTransactions = sortTransactionsByDate(updatedTransactions);
+      setTransactions(sortedTransactions);
       
       // Clear selection
       setSelectedTransactions([]);
@@ -228,24 +288,20 @@ function TransactionsPage() {
       
       // Refresh the transactions list
       const newTransactions = await transactionsApi.getTransactions();
-      setTransactions(newTransactions);
+      // Sort the transactions before setting them
+      const sortedTransactions = sortTransactionsByDate(newTransactions);
+      setTransactions(sortedTransactions);
       
       // Reset form
       resetTransactionForm();
       
-      // Close modal
-      setShowTransactionModal(false);
-      
-      // Refresh transactions
-      const updatedTransactions = await transactionsApi.getTransactions();
-      setTransactions(updatedTransactions);
-    } catch (err) {
-      console.error(`Error ${isEditMode ? 'updating' : 'creating'} transaction:`, err);
-      setError(`Failed to ${isEditMode ? 'update' : 'create'} transaction: ${err.message}`);
-    } finally {
-      setIsCreating(false);
       // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (err) {
+      console.error(`Error creating transaction:`, err);
+      setError(`Failed to create transaction: ${err.message}`);
+    } finally {
+      setIsCreating(false);
     }
   };
   
@@ -315,7 +371,18 @@ function TransactionsPage() {
               <table className="transactions-table">
                 <thead>
                   <tr>
-                    <th>Select</th>
+                    <th>
+                      <div className="select-all-container">
+                        <button 
+                          className="select-all-button"
+                          onClick={handleSelectAll}
+                          title="Select/Deselect All Unsaved Transactions"
+                        >
+                          {selectedTransactions.length === transactions.filter(t => !t.user_id).length && 
+                           transactions.filter(t => !t.user_id).length > 0 ? 'Deselect All' : 'Select All'}
+                        </button>
+                      </div>
+                    </th>
                     <th>Date</th>
                     <th>Description</th>
                     <th>Amount</th>

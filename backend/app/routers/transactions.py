@@ -141,8 +141,6 @@ def get_transaction(
         raise HTTPException(status_code=404, detail="Transaction not found")
     return db_transaction
 
-# Update transaction endpoint removed
-
 
 @router.delete("/{transaction_id}")
 def delete_transaction(
@@ -355,6 +353,7 @@ def get_monthly_summary(
 def get_summary_by_category(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    transaction_type: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -374,6 +373,10 @@ def get_summary_by_category(
     # Filter by user_id if transactions are associated with users
     if current_user:
         query = query.filter(Transaction.user_id == current_user.id)
+    
+    # Filter by transaction type if specified
+    if transaction_type:
+        query = query.filter(Transaction.transaction_type == transaction_type)
         
     query = query.group_by(
         Category.id

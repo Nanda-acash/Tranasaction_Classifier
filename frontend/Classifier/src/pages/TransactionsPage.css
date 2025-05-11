@@ -115,9 +115,32 @@
 }
 
 .transactions-table th {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
   background-color: var(--header-bg);
   font-weight: bold;
   color: var(--header-text);
+}
+
+.select-all-container {
+  display: flex;
+  justify-content: center;
+}
+
+.select-all-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.select-all-button:hover {
+  background-color: var(--primary-hover);
 }
 
 .transactions-table tr:hover {

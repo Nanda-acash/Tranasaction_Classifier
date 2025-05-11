@@ -143,6 +143,9 @@ export const transactionsApi = {
     try {
       // Get the authentication token
       const token = localStorage.getItem('walletwise_token');
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
       
       const response = await fetch(`${API_BASE_URL}/transactions/upload-csv`, {
         method: 'POST',
@@ -153,11 +156,26 @@ export const transactionsApi = {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to upload CSV');
+        let errorMessage = 'Failed to upload CSV';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (jsonError) {
+          console.error('Error parsing error response:', jsonError);
+          // Use status text if JSON parsing fails
+          errorMessage = `${errorMessage}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
       
-      return await response.json();
+      try {
+        return await response.json();
+      } catch (jsonError) {
+        console.error('Error parsing success response:', jsonError);
+        // If we can't parse the response as JSON, return an empty array
+        // This prevents the UI from breaking
+        return [];
+      }
     } catch (error) {
       console.error('Error uploading CSV:', error);
       throw error;
@@ -170,6 +188,7 @@ export const transactionsApi = {
     
     if (filters.start_date) queryParams.append('start_date', filters.start_date);
     if (filters.end_date) queryParams.append('end_date', filters.end_date);
+    if (filters.transaction_type) queryParams.append('transaction_type', filters.transaction_type);
     
     const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
     

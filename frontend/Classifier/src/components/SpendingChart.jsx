@@ -24,7 +24,8 @@ const SpendingChart = ({ initialData = null, year: initialYear = new Date().getF
     setLoading(true);
     setError(null);
     try {
-      const data = await transactionsApi.getMonthlySummary(year, month);
+      // Fetch all months for the selected year to ensure we have complete data
+      const data = await transactionsApi.getMonthlySummary(year);
       setSummaryData(data);
     } catch (err) {
       console.error('Error fetching spending summary:', err);
@@ -62,7 +63,7 @@ const SpendingChart = ({ initialData = null, year: initialYear = new Date().getF
     }
 
     // Find the maximum amount for scaling
-    const maxAmount = Math.max(...Object.values(categories));
+    const maxAmount = Math.max(...Object.values(categories).map(amount => Math.abs(amount)));
     
     return (
       <div className="bar-chart">
@@ -75,11 +76,15 @@ const SpendingChart = ({ initialData = null, year: initialYear = new Date().getF
                 <div 
                   className="bar" 
                   style={{ 
-                    width: `${(amount / maxAmount) * 100}%`,
+                    width: `${Math.max((Math.abs(amount) / maxAmount) * 100, 5)}%`,
                     backgroundColor: getCategoryColor(category)
                   }}
-                ></div>
-                <span className="bar-value">${amount.toFixed(2)}</span>
+                >
+                  {(Math.abs(amount) / maxAmount) * 100 > 15 && (
+                    <span className="bar-label-inside">${Math.abs(amount).toFixed(0)}</span>
+                  )}
+                </div>
+                <span className="bar-value">${Math.abs(amount).toFixed(2)}</span>
               </div>
             </div>
           ))}
@@ -115,7 +120,7 @@ const SpendingChart = ({ initialData = null, year: initialYear = new Date().getF
       return <div className="no-data">No spending data available for {selectedMonthName}</div>;
     }
 
-    const totalSpending = Object.values(categories).reduce((sum, amount) => sum + amount, 0);
+    const totalSpending = Object.values(categories).reduce((sum, amount) => sum + Math.abs(amount), 0);
     let currentAngle = 0;
 
     return (
@@ -166,7 +171,7 @@ const SpendingChart = ({ initialData = null, year: initialYear = new Date().getF
                 style={{ backgroundColor: getCategoryColor(category) }}
               ></div>
               <div className="legend-label">{category}</div>
-              <div className="legend-value">${amount.toFixed(2)} ({((amount / totalSpending) * 100).toFixed(1)}%)</div>
+              <div className="legend-value">${Math.abs(amount).toFixed(2)} ({((Math.abs(amount) / totalSpending) * 100).toFixed(1)}%)</div>
             </div>
           ))}
         </div>
