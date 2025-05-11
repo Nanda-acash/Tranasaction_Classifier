@@ -165,9 +165,57 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
+.login-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.auth-toggle {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.auth-toggle p {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+}
+
+.toggle-btn:hover {
+  text-decoration: underline;
+}
+
+.toggle-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
 .login-error {
   background-color: #f8d7da;
   color: #721c24;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.login-success {
+  background-color: #d4edda;
+  color: #155724;
   padding: 0.75rem;
   border-radius: 4px;
   margin-top: 1rem;
@@ -393,11 +441,28 @@ input:checked + .theme-slider:before {
   margin: 0 auto;
 }
 
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 2rem 0;
+  color: var(--text-color);
+  font-style: italic;
+}
+
 .transactions-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin: 1.5rem 0;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .upload-button {
@@ -437,6 +502,32 @@ input:checked + .theme-slider:before {
 
 .clear-button:hover {
   background-color: var(--danger-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.clear-button:disabled,
+.upload-button:disabled,
+.categorize-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.categorize-button {
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.categorize-button:hover {
+  background-color: var(--secondary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
@@ -482,6 +573,22 @@ input:checked + .theme-slider:before {
   font-weight: bold;
 }
 
+.category-select {
+  padding: 0.5rem;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  width: 100%;
+  cursor: pointer;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
 .no-data-message {
   text-align: center;
   padding: 3rem 0;
@@ -507,15 +614,110 @@ input:checked + .theme-slider:before {
   margin: 0 auto;
 }
 
-.dashboard-placeholder {
+.time-range-selector {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-  background-color: var(--placeholder-bg);
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.time-range-selector button {
+  padding: 0.5rem 1rem;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  border: 1px dashed var(--placeholder-border);
-  margin-top: 2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
   color: var(--text-color);
-  font-style: italic;
+}
+
+.time-range-selector button.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.time-range-selector button:hover:not(.active) {
+  background-color: var(--table-hover-bg);
+}
+
+.summary-content {
+  margin-top: 2rem;
+}
+
+.total-spending {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.total-amount {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--negative-color);
+  margin: 0.5rem 0;
+}
+
+.category-breakdown,
+.transaction-count {
+  margin-bottom: 2rem;
+}
+
+.chart-container {
+  margin-top: 1rem;
+}
+
+.chart-bar {
+  margin-bottom: 1.5rem;
+}
+
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.category-name {
+  font-weight: bold;
+}
+
+.category-amount {
+  color: var(--negative-color);
+}
+
+.bar-container {
+  width: 100%;
+  height: 20px;
+  background-color: var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  border-radius: 10px;
+}
+
+.bar-percentage {
+  text-align: right;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+  opacity: 0.7;
+}
+
+.count-list {
+  margin-top: 1rem;
+}
+
+.count-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.count-item:last-child {
+  border-bottom: none;
+}
+
+.transaction-count {
+  font-weight: bold;
 }
