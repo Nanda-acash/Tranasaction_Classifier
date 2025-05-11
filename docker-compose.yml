@@ -7,22 +7,9 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - ./backend/transaction_classifier.db:/app/transaction_classifier.db
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/transaction_classifier
-    depends_on:
-      - db
-    restart: always
-
-  db:
-    image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=transaction_classifier
-    ports:
-      - "5432:5432"
+      - DATABASE_URL=sqlite:///./transaction_classifier.db
     restart: always
 
   frontend:
@@ -32,9 +19,8 @@ services:
     volumes:
       - ./frontend/Classifier:/app
       - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
     depends_on:
       - backend
     restart: always
-
-volumes:
-  postgres_data:
