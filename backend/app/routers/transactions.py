@@ -88,7 +88,7 @@ def get_transactions(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get all transactions with optional filtering"""
-    query = db.query(Transaction)
+    query = db.query(Transaction).filter(Transaction.user_id == current_user.id)
     
     if category_id:
         query = query.filter(Transaction.category_id == category_id)
@@ -123,7 +123,9 @@ def create_transaction(
         if not category:
             raise HTTPException(status_code=404, detail="Category not found")
     
-    db_transaction = Transaction(**transaction.dict())
+    # Create transaction with current user's ID
+    transaction_data = transaction.dict()
+    db_transaction = Transaction(**transaction_data, user_id=current_user.id)
     db.add(db_transaction)
     db.commit()
     db.refresh(db_transaction)
@@ -136,7 +138,10 @@ def get_transaction(
     current_user: User = Depends(get_current_active_user)
 ):
     """Get a specific transaction by ID"""
-    db_transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+    db_transaction = db.query(Transaction).filter(
+        Transaction.id == transaction_id,
+        Transaction.user_id == current_user.id
+    ).first()
     if db_transaction is None:
         raise HTTPException(status_code=404, detail="Transaction not found")
     return db_transaction
@@ -149,7 +154,10 @@ def delete_transaction(
     current_user: User = Depends(get_current_active_user)
 ):
     """Delete a transaction"""
-    db_transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+    db_transaction = db.query(Transaction).filter(
+        Transaction.id == transaction_id,
+        Transaction.user_id == current_user.id
+    ).first()
     if db_transaction is None:
         raise HTTPException(status_code=404, detail="Transaction not found")
     
@@ -162,7 +170,7 @@ async def upload_csv(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
-    save_to_user: bool = False
+    save_to_user: bool = True
 ):
     """Upload and process a CSV file of transactions"""
     # Validate file extension
@@ -243,7 +251,7 @@ async def upload_csv(
                     transaction_type=transaction_type,
                     raw_text=raw_text,
                     category_id=category_id,
-                    user_id=current_user.id if save_to_user else None
+                    user_id=current_user.id
                 )
                 
                 db.add(transaction)
@@ -283,11 +291,14 @@ def save_transactions_to_user(
     if not transaction_ids:
         raise HTTPException(status_code=400, detail="No transaction IDs provided")
     
-    # Get transactions by IDs
-    transactions = db.query(Transaction).filter(Transaction.id.in_(transaction_ids)).all()
+    # Get transactions by IDs that are not already assigned to a user
+    transactions = db.query(Transaction).filter(
+        Transaction.id.in_(transaction_ids),
+        Transaction.user_id.is_(None)
+    ).all()
     
     if not transactions:
-        raise HTTPException(status_code=404, detail="No transactions found with the provided IDs")
+        raise HTTPException(status_code=404, detail="No unassigned transactions found with the provided IDs")
     
     # Associate transactions with the current user
     for transaction in transactions:
@@ -315,7 +326,8 @@ def get_monthly_summary(
         Transaction.category_id == Category.id
     ).filter(
         extract('year', Transaction.date) == year,
-        Transaction.transaction_type == 'debit'  # Only include expenses
+        Transaction.transaction_type == 'debit',  # Only include expenses
+        Transaction.user_id == current_user.id  # Only include current user's transactions
     )
     
     # Filter by month if provided
@@ -368,6 +380,8 @@ def get_summary_by_category(
         Transaction, 
         Category.id == Transaction.category_id, 
         isouter=True
+    ).filter(
+        Transaction.user_id == current_user.id  # Only include current user's transactions
     )
     
     # Filter by user_id if transactions are associated with users
