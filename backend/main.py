@@ -14,7 +14,7 @@ app = FastAPI(title="Bank Statement Classifier API")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Frontend development server
+    allow_origins=["http://localhost:5176", "http://127.0.0.1:5176"],  # Frontend development server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,4 +31,4 @@ async def root():
     return {"message": "Welcome to Bank Statement Classifier API"}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8009, reload=True)

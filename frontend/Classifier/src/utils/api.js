@@ -1,5 +1,5 @@
 // API service for interacting with the backend
-const API_BASE_URL = 'http://localhost:8001/api';
+const API_BASE_URL = 'http://localhost:8009/api';
 
 // Authentication API
 export const authApi = {
